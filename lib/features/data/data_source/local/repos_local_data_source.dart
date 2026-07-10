@@ -7,13 +7,11 @@ class ReposLocalDataSource {
   const ReposLocalDataSource({required this.localDataBaseService});
 
   Future<List<RepoModel>> getReposs({int skip = 0, int limit = 10}) async {
-    final cachedData = await localDataBaseService.getData<Map>(
-      'cached_Reposs',
-    );
+    final cachedData = await localDataBaseService.getData('cached_repos');
     if (cachedData.isEmpty) return [];
 
     final List<RepoModel> reposList = cachedData
-        .map((map) => RepoModel.fromJson(Map<String, dynamic>.from(map)))
+        .map((map) => RepoModel.fromJson(Map<String, dynamic>.from(map as Map)))
         .toList();
 
     if (skip >= reposList.length) return [];
@@ -33,13 +31,11 @@ class ReposLocalDataSource {
         repos.map((e) => e.toJson()).toList();
 
     if (clear) {
-      await localDataBaseService.saveData('cached_Reposs', newMaps);
+      await localDataBaseService.saveData('cached_repos', newMaps);
     } else {
-      final existingData = await localDataBaseService.getData<Map>(
-        'cached_Reposs',
-      );
+      final existingData = await localDataBaseService.getData('cached_repos');
       final List<RepoModel> existingReposs = existingData
-          .map((map) => RepoModel.fromJson(Map<String, dynamic>.from(map)))
+          .map((map) => RepoModel.fromJson(Map<String, dynamic>.from(map as Map)))
           .toList();
 
       final existingIds = existingReposs.map((e) => e.id).toSet();
@@ -49,7 +45,7 @@ class ReposLocalDataSource {
 
       if (filteredNew.isNotEmpty) {
         final newFilteredMaps = filteredNew.map((e) => e.toJson()).toList();
-        await localDataBaseService.addData('cached_Reposs', newFilteredMaps);
+        await localDataBaseService.addData('cached_repos', newFilteredMaps);
       }
     }
   }

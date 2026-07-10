@@ -13,7 +13,6 @@ import '../services/local_database.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
-
   final dio = Dio(
     BaseOptions(
       baseUrl: ApiConstant.baseUrl,

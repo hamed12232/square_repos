@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 import 'package:square_repos/features/presentaion/widgets/repo_card.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_styles.dart';
-import '../../domain/entities/owner_entity.dart';
 import '../../domain/entities/repo_entity.dart';
 import '../cubit/repo_cubit.dart';
 import '../cubit/repo_state.dart';
+import 'repo_error_widget.dart';
+import 'repo_pagination_loader.dart';
+import 'repo_skeleton_list.dart';
 
 class RepoListView extends StatefulWidget {
   const RepoListView({super.key});
@@ -45,9 +46,12 @@ class RepoListViewState extends State<RepoListView> {
     return BlocBuilder<RepoCubit, RepoState>(
       builder: (context, state) {
         return switch (state) {
-          ReposInitial() || ReposLoading() => _buildSkeletonList(),
-          ReposFailure(:final errMessage) =>
-            _buildErrorWidget(context, errMessage),
+          ReposInitial() || ReposLoading() => const RepoSkeletonList(),
+          ReposFailure(:final errMessage) => RepoErrorWidget(
+              message: errMessage,
+              onRetry: () =>
+                  context.read<RepoCubit>().getRepos(refresh: true),
+            ),
           ReposSuccess(:final repos) => repos.isEmpty
               ? Center(
                   child: Text(
@@ -74,72 +78,10 @@ class RepoListViewState extends State<RepoListView> {
         itemCount: repos.length + (cubit.hasMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index >= repos.length) {
-            return _buildPaginationLoader();
+            return const RepoPaginationLoader();
           }
           return RepoCard(repo: repos[index]);
         },
-      ),
-    );
-  }
-
-  Widget _buildSkeletonList() {
-    final dummyRepos = List.generate(
-      8,
-      (index) => RepoEntity(
-        id: index,
-        name: 'Skeleton Repository Name',
-        description:
-            'This is a mock description that represents the repository details.',
-        fork: index % 3 == 0,
-        htmlUrl: '',
-        owner: const OwnerEntity(login: 'square', htmlUrl: ''),
-      ),
-    );
-
-    return Skeletonizer(
-      enabled: true,
-      child: ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        itemCount: dummyRepos.length,
-        itemBuilder: (context, index) => RepoCard(repo: dummyRepos[index]),
-      ),
-    );
-  }
-
-  Widget _buildErrorWidget(BuildContext context, String message) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(24.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline_rounded,
-              color: AppColors.error,
-              size: 48.w,
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              message,
-              style: AppStyles.bodyLarge,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 24.h),
-            ElevatedButton(
-              onPressed: () => context.read<RepoCubit>().getRepos(refresh: true),
-              child: const Text('Try Again'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPaginationLoader() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 16.h),
-      child: const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
       ),
     );
   }

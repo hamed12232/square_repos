@@ -44,9 +44,19 @@ class ReposRepositoryImpl implements ReposRepository {
         clear: skip == 0,
       );
       return Right(remoteRepos);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.errorMessageModel.statusMessage));
     } catch (e) {
+      try {
+        final localRepos = await localDataSource.getReposs(skip: skip, limit: limit);
+        if (localRepos.isNotEmpty) {
+          return Right(localRepos);
+        }
+      } catch (_) {
+        // Fall through to return the original error if cache reading fails
+      }
+
+      if (e is ServerException) {
+        return Left(ServerFailure(e.errorMessageModel.statusMessage));
+      }
       return Left(ServerFailure(e.toString()));
     }
   }

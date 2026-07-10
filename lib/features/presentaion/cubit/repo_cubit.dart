@@ -38,7 +38,7 @@ class RepoCubit extends Cubit<RepoState> {
         emit(ReposFailure(failure.errMessage));
       },
       (data) {
-        repos = data;
+        repos = List.from(data);
         skip = repos.length;
 
         if (data.length < limit) {
@@ -63,6 +63,7 @@ class RepoCubit extends Cubit<RepoState> {
     result.fold(
       (failure) {
         isLoadingMore = false;
+        // Keep existing data but allow retrying
       },
       (data) {
         repos.addAll(data);
@@ -73,7 +74,6 @@ class RepoCubit extends Cubit<RepoState> {
         }
 
         isLoadingMore = false;
-
         emit(ReposSuccess(List.from(repos)));
       },
     );

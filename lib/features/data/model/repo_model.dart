@@ -18,7 +18,7 @@ class RepoModel extends RepoEntity {
       description: json['description'] ?? '',
       fork: json['fork'] ?? false,
       htmlUrl: json['html_url'] ?? '',
-      owner: OwnerModel.fromJson(json['owner'] ?? {}),
+      owner: OwnerModel.fromJson(Map<String, dynamic>.from(json['owner'] ?? {})),
     );
   }
 
