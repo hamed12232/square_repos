@@ -14,7 +14,7 @@ class HomeRepoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => sl<RepoCubit>()..loadRepos(),
+      create: (context) => sl<RepoCubit>()..getRepos(),
       child: Scaffold(
         appBar: AppBar(
           title: Text('Square Repositories', style: AppStyles.title),

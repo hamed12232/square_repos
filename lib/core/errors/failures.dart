@@ -9,6 +9,8 @@ abstract class Failure extends Equatable {
 
   const Failure(this.message);
 
+  String get errMessage => message;
+
   @override
   List<Object> get props => [message];
 }

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/presentaion/pages/home_repo_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -14,11 +14,7 @@ class AppRouter {
     routes: [
       GoRoute(
         path: AppRoutes.root,
-        builder: (context, state) => const Scaffold(
-          body: Center(
-            child: Text('Square Repos App'),
-          ),
-        ),
+        builder: (context, state) => const HomeRepoScreen(),
       ),
     ],
   );

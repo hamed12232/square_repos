@@ -16,34 +16,38 @@ class ReposRepositoryImpl implements ReposRepository {
   });
 
   @override
-  Stream<Either<Failure, List<RepoEntity>>> getRepos({
-    required int page,
-    required int perPage,
-  }) async* {
-    final skip = (page - 1) * perPage;
-
+  Future<List<RepoEntity>> getLocalRepos({
+    required int skip,
+    required int limit,
+  }) async {
     try {
-      final cachedRepos = await localDataSource.getReposs(skip: skip, limit: perPage);
-      if (cachedRepos.isNotEmpty) {
-        yield Right(cachedRepos);
-      }
+      return await localDataSource.getReposs(skip: skip, limit: limit);
     } catch (_) {
-      // Ignore cache retrieval exceptions and proceed to network fetch
+      return [];
     }
+  }
+
+  @override
+  Future<Either<Failure, List<RepoEntity>>> getRepos({
+    required int skip,
+    required int limit,
+  }) async {
     try {
+      // Convert skip/limit to page number for the GitHub API
+      final page = limit == 0 ? 1 : (skip ~/ limit) + 1;
       final remoteRepos = await remoteDataSource.getRepos(
         page: page,
-        perPage: perPage,
+        perPage: limit,
       );
       await localDataSource.saveRepossToCache(
         repos: remoteRepos,
-        clear: page == 1,
+        clear: skip == 0,
       );
-      yield Right(remoteRepos);
+      return Right(remoteRepos);
     } on ServerException catch (e) {
-      yield Left(ServerFailure(e.errorMessageModel.statusMessage));
+      return Left(ServerFailure(e.errorMessageModel.statusMessage));
     } catch (e) {
-      yield Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

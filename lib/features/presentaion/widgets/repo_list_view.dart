@@ -36,101 +36,50 @@ class RepoListViewState extends State<RepoListView> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200.h) {
-      context.read<RepoCubit>().loadNextPage();
+      context.read<RepoCubit>().loadMore();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<RepoCubit, RepoState>(
-      listener: (context, state) {
-        if (state is RepoLoaded && state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage!),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      },
+    return BlocBuilder<RepoCubit, RepoState>(
       builder: (context, state) {
-        if (state is RepoInitial || (state is RepoLoading && _isEmpty(state))) {
-          return _buildSkeletonList();
-        }
-
-        if (state is RepoError) {
-          return Center(
-            child: Padding(
-              padding: EdgeInsets.all(24.w),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    color: AppColors.error,
-                    size: 48.w,
-                  ),
-                  SizedBox(height: 16.h),
-                  Text(
-                    state.message,
+        return switch (state) {
+          ReposInitial() || ReposLoading() => _buildSkeletonList(),
+          ReposFailure(:final errMessage) =>
+            _buildErrorWidget(context, errMessage),
+          ReposSuccess(:final repos) => repos.isEmpty
+              ? Center(
+                  child: Text(
+                    'No repositories found.',
                     style: AppStyles.bodyLarge,
-                    textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 24.h),
-                  ElevatedButton(
-                    onPressed: () =>
-                        context.read<RepoCubit>().loadRepos(isRefresh: true),
-                    child: const Text('Try Again'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        final repos = _getRepos(state);
-        final hasReachedMax = _hasReachedMax(state);
-
-        if (repos.isEmpty) {
-          return Center(
-            child: Text('No repositories found', style: AppStyles.bodyLarge),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: () => context.read<RepoCubit>().loadRepos(isRefresh: true),
-          color: AppColors.primary,
-          child: ListView.builder(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            itemCount: repos.length + (hasReachedMax ? 0 : 1),
-            itemBuilder: (context, index) {
-              if (index >= repos.length) {
-                return _buildLoadingIndicator();
-              }
-              return RepoCard(repo: repos[index]);
-            },
-          ),
-        );
+                )
+              : _buildList(context, repos),
+        };
       },
     );
   }
 
-  bool _isEmpty(RepoState state) {
-    if (state is RepoLoaded) return state.repos.isEmpty;
-    return true;
-  }
+  Widget _buildList(BuildContext context, List<RepoEntity> repos) {
+    final cubit = context.read<RepoCubit>();
 
-  List<RepoEntity> _getRepos(RepoState state) {
-    if (state is RepoLoaded) return state.repos;
-    return [];
-  }
-
-  bool _hasReachedMax(RepoState state) {
-    if (state is RepoLoaded) return state.hasReachedMax;
-    return true;
+    return RefreshIndicator(
+      onRefresh: () => cubit.getRepos(refresh: true),
+      color: AppColors.primary,
+      child: ListView.builder(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        itemCount: repos.length + (cubit.hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index >= repos.length) {
+            return _buildPaginationLoader();
+          }
+          return RepoCard(repo: repos[index]);
+        },
+      ),
+    );
   }
 
   Widget _buildSkeletonList() {
@@ -152,14 +101,41 @@ class RepoListViewState extends State<RepoListView> {
       child: ListView.builder(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         itemCount: dummyRepos.length,
-        itemBuilder: (context, index) {
-          return RepoCard(repo: dummyRepos[index]);
-        },
+        itemBuilder: (context, index) => RepoCard(repo: dummyRepos[index]),
       ),
     );
   }
 
-  Widget _buildLoadingIndicator() {
+  Widget _buildErrorWidget(BuildContext context, String message) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              color: AppColors.error,
+              size: 48.w,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              message,
+              style: AppStyles.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24.h),
+            ElevatedButton(
+              onPressed: () => context.read<RepoCubit>().getRepos(refresh: true),
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaginationLoader() {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 16.h),
       child: const Center(

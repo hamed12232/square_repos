@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:square_repos/core/constants/api_constant.dart';
 
 import '../../features/data/data_source/local/repos_local_data_source.dart';
 import '../../features/data/data_source/remote/repos_remote_data_source.dart';
@@ -12,11 +13,16 @@ import '../services/local_database.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // =========================================================================
-  // 1. External Services
-  // =========================================================================
 
-  // Dio & DioFactory
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: ApiConstant.baseUrl,
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+      sendTimeout: const Duration(seconds: 15),
+    ),
+  );
+  sl.registerLazySingleton<Dio>(() => dio);
 
   // Local Database Service
   sl.registerLazySingleton<LocalDataBaseService>(() => LocalDataBaseService());
@@ -48,7 +54,6 @@ Future<void> init() async {
   sl.registerLazySingleton<GetReposUseCase>(
     () => GetReposUseCase(sl<ReposRepository>()),
   );
-  
 
   // =========================================================================
   // 5. Cubits (MUST be Factory)

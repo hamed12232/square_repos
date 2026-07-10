@@ -8,10 +8,10 @@ class GetReposUseCase {
 
   const GetReposUseCase(this.repository);
 
-  Stream<Either<Failure, List<RepoEntity>>> call({
-    required int page,
-    required int perPage,
+  Future<Either<Failure, List<RepoEntity>>> call({
+    required int skip,
+    required int limit,
   }) {
-    return repository.getRepos(page: page, perPage: perPage);
+    return repository.getRepos(skip: skip, limit: limit);
   }
 }
