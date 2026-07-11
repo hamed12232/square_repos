@@ -6,8 +6,10 @@ import '../../features/data/data_source/remote/repos_remote_data_source.dart';
 import '../../features/data/repo/repos_repository_impl.dart';
 import '../../features/domain/repositry/repos_repository.dart';
 import '../../features/domain/usecase/get_repo.dart';
+import '../../features/domain/usecase/sync_repositories_use_case.dart';
 import '../../features/presentaion/cubit/repo_cubit.dart';
 import '../services/local_database.dart';
+import '../services/notification_service.dart';
 
 final sl = GetIt.instance;
 
@@ -24,6 +26,9 @@ Future<void> init() async {
 
   // Local Database Service
   sl.registerLazySingleton<LocalDataBaseService>(() => LocalDataBaseService());
+
+  // Notification Service
+  sl.registerLazySingleton<NotificationService>(() => NotificationService());
 
   // =========================================================================
   // 2. DataSources
@@ -51,6 +56,12 @@ Future<void> init() async {
   // =========================================================================
   sl.registerLazySingleton<GetReposUseCase>(
     () => GetReposUseCase(sl<ReposRepository>()),
+  );
+  sl.registerLazySingleton<SyncRepositoriesUseCase>(
+    () => SyncRepositoriesUseCase(
+      repository: sl<ReposRepository>(),
+      notificationService: sl<NotificationService>(),
+    ),
   );
 
   // =========================================================================

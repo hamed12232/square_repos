@@ -49,6 +49,8 @@ dependencies:
   equatable: ^2.0.7
   skeletonizer: ^2.0.0
   url_launcher: ^6.3.2
+  flutter_local_notifications: ^22.0.1
+  workmanager: ^0.9.0+3
 
 dev_dependencies:
   flutter_test:

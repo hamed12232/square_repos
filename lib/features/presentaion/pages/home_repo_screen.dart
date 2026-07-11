@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:square_repos/features/presentaion/widgets/repo_list_view.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_styles.dart';
 import '../cubit/repo_cubit.dart';
@@ -18,6 +19,17 @@ class HomeRepoScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Square Repositories', style: AppStyles.title),
+          actions: [
+            TextButton(
+              onPressed: () {
+                sl<NotificationService>().showNotification(
+                  title: 'New Repositories',
+                  body: 'This is a test notification.',
+                );
+              },
+              child: const Text('Test Notification'),
+            ),
+          ],
           bottom: PreferredSize(
             preferredSize: Size.fromHeight(1.h),
             child: Divider(

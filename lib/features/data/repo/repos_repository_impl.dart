@@ -5,6 +5,8 @@ import '../../domain/entities/repo_entity.dart';
 import '../../domain/repositry/repos_repository.dart';
 import '../data_source/local/repos_local_data_source.dart';
 import '../data_source/remote/repos_remote_data_source.dart';
+import '../model/owner_model.dart';
+import '../model/repo_model.dart';
 
 class ReposRepositoryImpl implements ReposRepository {
   final ReposRemoteDataSource remoteDataSource;
@@ -47,6 +49,56 @@ class ReposRepositoryImpl implements ReposRepository {
         return Left(ServerFailure(e.errorMessageModel.statusMessage));
       }
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<RepoEntity>>> getRemoteRepos({
+    required int page,
+    required int perPage,
+  }) async {
+    try {
+      final remoteRepos = await remoteDataSource.getRepos(
+        page: page,
+        perPage: perPage,
+      );
+      return Right(remoteRepos);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.errorMessageModel.statusMessage));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<List<RepoEntity>> getCachedRepos() async {
+    try {
+      return await localDataSource.getReposs(skip: 0, limit: 1000);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  @override
+  Future<void> saveReposToCache(List<RepoEntity> repos, {bool clear = false}) async {
+    try {
+      final List<RepoModel> repoModels = repos.map((e) => RepoModel(
+        id: e.id,
+        name: e.name,
+        description: e.description,
+        fork: e.fork,
+        htmlUrl: e.htmlUrl,
+        owner: OwnerModel(
+          login: e.owner.login,
+          htmlUrl: e.owner.htmlUrl,
+        ),
+      )).toList();
+      await localDataSource.saveRepossToCache(
+        repos: repoModels,
+        clear: clear,
+      );
+    } catch (_) {
+      // Ignore or log error
     }
   }
 }
