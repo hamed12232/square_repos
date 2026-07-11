@@ -15,9 +15,28 @@ class RepoCubit extends Cubit<RepoState> {
   final int limit = 10;
 
   List<RepoEntity> repos = [];
+  String searchQuery = '';
 
   bool isLoadingMore = false;
   bool hasMore = true;
+
+  List<RepoEntity> get _displayedRepos {
+    if (searchQuery.isEmpty) {
+      return List.from(repos);
+    }
+    final q = searchQuery.toLowerCase();
+    return repos.where((repo) {
+      final name = repo.name.toLowerCase();
+      final description = repo.description.toLowerCase();
+      final owner = repo.owner.login.toLowerCase();
+      return name.contains(q) || description.contains(q) || owner.contains(q);
+    }).toList();
+  }
+
+  void search(String query) {
+    searchQuery = query;
+    emit(ReposSuccess(_displayedRepos));
+  }
 
   Future<void> getRepos({bool refresh = false}) async {
     if (refresh) {
@@ -45,7 +64,7 @@ class RepoCubit extends Cubit<RepoState> {
           hasMore = false;
         }
 
-        emit(ReposSuccess(repos));
+        emit(ReposSuccess(_displayedRepos));
       },
     );
   }
@@ -74,7 +93,7 @@ class RepoCubit extends Cubit<RepoState> {
         }
 
         isLoadingMore = false;
-        emit(ReposSuccess(List.from(repos)));
+        emit(ReposSuccess(_displayedRepos));
       },
     );
   }

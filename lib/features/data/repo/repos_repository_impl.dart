@@ -15,17 +15,6 @@ class ReposRepositoryImpl implements ReposRepository {
     required this.localDataSource,
   });
 
-  @override
-  Future<List<RepoEntity>> getLocalRepos({
-    required int skip,
-    required int limit,
-  }) async {
-    try {
-      return await localDataSource.getReposs(skip: skip, limit: limit);
-    } catch (_) {
-      return [];
-    }
-  }
 
   @override
   Future<Either<Failure, List<RepoEntity>>> getRepos({

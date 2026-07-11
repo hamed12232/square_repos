@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:square_repos/core/constants/api_constant.dart';
-
 import '../../features/data/data_source/local/repos_local_data_source.dart';
 import '../../features/data/data_source/remote/repos_remote_data_source.dart';
 import '../../features/data/repo/repos_repository_impl.dart';

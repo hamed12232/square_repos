@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:square_repos/features/presentaion/widgets/repo_card.dart';
+import 'package:square_repos/features/presentaion/widgets/search_text_field.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_styles.dart';
@@ -43,25 +44,35 @@ class RepoListViewState extends State<RepoListView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<RepoCubit, RepoState>(
-      builder: (context, state) {
-        return switch (state) {
-          ReposInitial() || ReposLoading() => const RepoSkeletonList(),
-          ReposFailure(:final errMessage) => RepoErrorWidget(
-              message: errMessage,
-              onRetry: () =>
-                  context.read<RepoCubit>().getRepos(refresh: true),
-            ),
-          ReposSuccess(:final repos) => repos.isEmpty
-              ? Center(
-                  child: Text(
-                    'No repositories found.',
-                    style: AppStyles.bodyLarge,
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          child: SearchTextField(),
+        ),
+        Expanded(
+          child: BlocBuilder<RepoCubit, RepoState>(
+            builder: (context, state) {
+              return switch (state) {
+                ReposInitial() || ReposLoading() => const RepoSkeletonList(),
+                ReposFailure(:final errMessage) => RepoErrorWidget(
+                    message: errMessage,
+                    onRetry: () =>
+                        context.read<RepoCubit>().getRepos(refresh: true),
                   ),
-                )
-              : _buildList(context, repos),
-        };
-      },
+                ReposSuccess(:final repos) => repos.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No repositories found.',
+                          style: AppStyles.bodyLarge,
+                        ),
+                      )
+                    : _buildList(context, repos),
+              };
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -86,3 +97,4 @@ class RepoListViewState extends State<RepoListView> {
     );
   }
 }
+
